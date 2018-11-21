@@ -1,14 +1,9 @@
 
 function init() {
+	i = 0;
 	var scene = new THREE.Scene(); //Create a scene
 
 	var gui = new dat.GUI(); //Create a dat gui to interactivelly change parameters
-
-	var enable_fog = false;
-
-	if (enable_fog){
-		scene.fog = new THREE.FogExp2(0xffffff, 0.2); //Add fog to the scene
-	}
 
 	var plane = getPlane(30); // Create a plane
 	plane.name = 'plane-1'; //Give a name to the plane
@@ -17,6 +12,7 @@ function init() {
 	var sphere = getSphere(0.05);
 	var boxGrid = getBoxGrid(10, 1.5);
 	boxGrid.name = 'boxGrid';
+	light.name = 'lightsource'
 
 	plane.rotation.x = Math.PI/2; // Move the plane 90 degrees (pi/2 radians)
 	light.position.x = 8;
@@ -44,9 +40,9 @@ function init() {
 		1000 //Limit how far can an object be from the camera and still be rendered
 	);
 
-	camera.position.x = 1;
-	camera.position.y = 2;
-	camera.position.z = 5;
+	camera.position.x = 10;
+	camera.position.y = 10;
+	camera.position.z = 10;
 
 	camera.lookAt(new THREE.Vector3(0,0,0));
 
@@ -114,16 +110,28 @@ function getBoxGrid(numBoxes, separationBoxes){
 	var group = new THREE.Group();
 
 	for (var i=0;i<numBoxes;i++){
-		var obj = getBox(1,1,1);
-		obj.position.x = i * separationBoxes;
-		obj.position.y = obj.geometry.parameters.height/2;
-		group.add(obj);
-		for (var j=1;j<numBoxes;j++){
-			var obj = getBox(1,1,1);
-			obj.position.x = i * separationBoxes;
-			obj.position.y = obj.geometry.parameters.height/2;
-			obj.position.z = j * separationBoxes;
-			group.add(obj);
+		for (var j=0;j<numBoxes;j++){
+			///var obj = getBox(1,1,1);
+			if (i<=numBoxes/2){
+				if (j<=numBoxes/2)
+					var obj = getBox(1,(j+i)/2,1);
+				else
+					var obj = getBox(1,(numBoxes-j)/2,1);
+				obj.position.x = i * separationBoxes;
+				obj.position.y = obj.geometry.parameters.height/2;
+				obj.position.z = j * separationBoxes;
+				group.add(obj);
+			}
+			else{
+				if (j<=numBoxes/2)
+					var obj = getBox(1,(j+i)/2,1);
+				else
+					var obj = getBox(1,(numBoxes-j)/2,1);
+				obj.position.x = i * separationBoxes;
+				obj.position.y = obj.geometry.parameters.height/2;
+				obj.position.z = j * separationBoxes;
+				group.add(obj);
+			}
 		}
 	}
 
@@ -163,11 +171,17 @@ function getPlane(size){
 function update(renderer, scene, camera, controls){
 	renderer.render(scene, camera);
 
-	var boxGrid = getObjectByName('boxGrid');
+	/*var boxGrid = getObjectByName('boxGrid');
 	boxGrid.children.forEach(function(child){
 		child.scale.y = Math.random();
 		child.position.y = child.scale.y/2;
-	});
+	});*/
+
+	/*var light = getObjectByName('lightsource');
+	light.position.x = Math.cos(i)*20;
+	light.position.z = Math.sin(i)*20;
+	i = i + Math.PI/180;*/
+
 
 	controls.update();	
 
