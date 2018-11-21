@@ -1,0 +1,28 @@
+[debug] [2018-10-22T20:50:36.756Z] ----------------------------------------------------------------------
+[debug] [2018-10-22T20:50:36.758Z] Command:       /usr/local/bin/node /usr/local/bin/firebase serve
+[debug] [2018-10-22T20:50:36.759Z] CLI Version:   4.2.1
+[debug] [2018-10-22T20:50:36.759Z] Platform:      darwin
+[debug] [2018-10-22T20:50:36.759Z] Node Version:  v8.9.1
+[debug] [2018-10-22T20:50:36.759Z] Time:          Mon Oct 22 2018 15:50:36 GMT-0500 (CDT)
+[debug] [2018-10-22T20:50:36.759Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2018-10-22T20:50:36.784Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2018-10-22T20:50:36.785Z] > authorizing via signed-in user
+[debug] [2018-10-22T20:50:36.787Z] > refreshing access token with scopes: ["email","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","openid"]
+[debug] [2018-10-22T20:50:36.787Z] >>> HTTP REQUEST POST https://www.googleapis.com/oauth2/v3/token  
+
+[debug] [2018-10-22T20:50:37.837Z] <<< HTTP RESPONSE 200
+[debug] [2018-10-22T20:50:37.856Z] >>> HTTP REQUEST GET https://admin.firebase.com/v1/projects/artecinetico-1f2b0  
+ 
+[debug] [2018-10-22T20:50:38.506Z] <<< HTTP RESPONSE 200
+[debug] [2018-10-22T20:50:38.508Z] >>> HTTP REQUEST GET https://cloudresourcemanager.googleapis.com/v1/projects/artecinetico-1f2b0  
+ 
+[debug] [2018-10-22T20:50:39.992Z] <<< HTTP RESPONSE 200
+[info] 
+[info] === Serving from '/Users/diego/proyFinalGraficas'...
+[info] 
+[debug] [2018-10-22T20:50:39.996Z] >>> HTTP REQUEST GET https://mobilesdk-pa.googleapis.com/v1/projects/476048839687/clients/_:getWebAppConfig  
+ 
+[debug] [2018-10-22T20:50:41.318Z] <<< HTTP RESPONSE 200
+[info] i  hosting[artecinetico-1f2b0]: Serving hosting files from: public
+[info] ✔  hosting[artecinetico-1f2b0]: Local server: http://localhost:5000
