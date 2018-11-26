@@ -5,19 +5,21 @@ function init() {
 
 	var gui = new dat.GUI(); //Create a dat gui to interactivelly change parameters
 
-	var plane = getPlane(30); // Create a plane
+	var numCubesAux = 15
+
+	var plane = getPlane(numCubesAux*3); // Create a plane
 	plane.name = 'plane-1'; //Give a name to the plane
 	var light = getDirectionalLight(0xffffff,1); //Create a lightsource
 	var Ambientlight = getAmbientLight('rgb(10,20,30)',1);
 	var sphere = getSphere(0.05);
-	var boxGrid = getBoxGrid(10, 1.5);
+	var boxGrid = getBoxGrid(numCubesAux, numCubesAux/10);
 	boxGrid.name = 'boxGrid';
 	light.name = 'lightsource'
 
 	plane.rotation.x = Math.PI/2; // Move the plane 90 degrees (pi/2 radians)
-	light.position.x = 8;
-	light.position.y = 4;
-	light.position.z = 10;
+	light.position.x = numCubesAux;
+	light.position.y = numCubesAux/2;
+	light.position.z = numCubesAux;
 	light.intensity = 2;
 	
 	
@@ -28,9 +30,9 @@ function init() {
 	scene.add(boxGrid);
 
 	gui.add(light, 'intensity', 0, 10);
-	gui.add(light.position, 'y', 0,10);
-	gui.add(light.position, 'x', -10,10);
-	gui.add(light.position, 'z', -10,10);
+	gui.add(light.position, 'y', 0,numCubesAux*2);
+	gui.add(light.position, 'x', numCubesAux*-2,numCubesAux*2);
+	gui.add(light.position, 'z', numCubesAux*-2,numCubesAux*2);
 	//gui.add(light, 'penumbra', 0, 1);
 
 	var camera = new THREE.PerspectiveCamera( //Create a camera
@@ -40,9 +42,9 @@ function init() {
 		1000 //Limit how far can an object be from the camera and still be rendered
 	);
 
-	camera.position.x = 10;
-	camera.position.y = 10;
-	camera.position.z = 10;
+	camera.position.x = numCubesAux*3;
+	camera.position.y = numCubesAux;
+	camera.position.z = numCubesAux*3;
 
 	camera.lookAt(new THREE.Vector3(0,0,0));
 
@@ -114,9 +116,9 @@ function getBoxGrid(numBoxes, separationBoxes){
 			///var obj = getBox(1,1,1);
 			if (i<=numBoxes/2){
 				if (j<=numBoxes/2)
-					var obj = getBox(1,(j+i)/2,1);
+					var obj = getBox(1,Math.sqrt(j*i),1);
 				else
-					var obj = getBox(1,(numBoxes-j)/2,1);
+					var obj = getBox(1,Math.sqrt((numBoxes-j)*i),1);
 				obj.position.x = i * separationBoxes;
 				obj.position.y = obj.geometry.parameters.height/2;
 				obj.position.z = j * separationBoxes;
@@ -124,9 +126,9 @@ function getBoxGrid(numBoxes, separationBoxes){
 			}
 			else{
 				if (j<=numBoxes/2)
-					var obj = getBox(1,(j+i)/2,1);
+					var obj = getBox(1,Math.sqrt(j*(numBoxes-i)),1);
 				else
-					var obj = getBox(1,(numBoxes-j)/2,1);
+					var obj = getBox(1,Math.sqrt((numBoxes-j)*(numBoxes-i)),1);
 				obj.position.x = i * separationBoxes;
 				obj.position.y = obj.geometry.parameters.height/2;
 				obj.position.z = j * separationBoxes;
@@ -172,15 +174,15 @@ function update(renderer, scene, camera, controls){
 	renderer.render(scene, camera);
 
 	/*var boxGrid = getObjectByName('boxGrid');
-	boxGrid.children.forEach(function(child){
+	boxGrid.children.forEach(function(child
 		child.scale.y = Math.random();
 		child.position.y = child.scale.y/2;
 	});*/
 
-	/*var light = getObjectByName('lightsource');
-	light.position.x = Math.cos(i)*20;
-	light.position.z = Math.sin(i)*20;
-	i = i + Math.PI/180;*/
+	//var camera = getObjectByName('camera');
+	camera.position.x = Math.cos(i)*20;
+	camera.position.z = Math.sin(i)*20;
+	i = i + Math.PI/180;
 
 
 	controls.update();	
