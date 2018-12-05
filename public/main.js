@@ -1,5 +1,9 @@
 
 var raycaster, camera, mouse = { x : 0, y : 0 };
+var numCubs = 15;
+var numCubesAux = numCubs + 1;
+var boxGrid = getBoxGrid(numCubesAux, 2);
+var plane = getPlane(numCubesAux*2.5); // Create a plane
 
 
 function init() {
@@ -9,21 +13,20 @@ function init() {
 
 	var gui = new dat.GUI(); //Create a dat gui to interactivelly change parameters
 
-	var numCubs = 10;
-	var numCubesAux = numCubs + 1;
-
-	var plane = getPlane(numCubesAux*3); // Create a plane
+	
 	plane.name = 'plane-1'; //Give a name to the plane
+	var col = new THREE.Color( .4,.4,.4 );
+	plane.material.color = col;
 	var light = getDirectionalLight(0xffffff,1); //Create a lightsource
 	var sphere = getSphere(0.05);
 	//var box = getBox(1,1,1);
-	var boxGrid = getBoxGrid(numCubesAux, 2);
+	
 	boxGrid.name = 'boxGrid';
 
 	plane.rotation.x = Math.PI/2; // Move the plane 90 degrees (pi/2 radians)
-	light.position.x = numCubesAux;
-	light.position.y = numCubesAux/2;
-	light.position.z = numCubesAux;
+	light.position.x = numCubesAux*-2;
+	light.position.y = numCubesAux*2;
+	light.position.z = numCubesAux*2;
 	light.intensity = 2;
 	
 	
@@ -33,10 +36,30 @@ function init() {
 	for (var g=0; g<boxGrid.length;g++){
 		scene.add(boxGrid[g]);
 	}
-	
 
+	var boton = { Reduce:function(){
+			if(numCubesAux>1){
+				numCubesAux = numCubesAux - 1;
+
+				for (var g=0; g<boxGrid.length;g++){
+						scene.remove(boxGrid[g]);
+					}
+				console.log(numCubesAux);
+				boxGrid = getBoxGrid(numCubesAux, 2);
+				console.log(numCubesAux);
+
+		    	for (var g=0; g<boxGrid.length;g++){
+					scene.add(boxGrid[g]);
+			}
+				scene.remove(plane);
+				plane = getPlane(numCubesAux*3);
+				plane.rotation.x = Math.PI/2;
+				scene.add(plane)
+			}}};
+
+	gui.add(boton,'Reduce');
 	gui.add(light, 'intensity', 0, 10);
-	gui.add(light.position, 'y', 0,numCubesAux*2);
+	gui.add(light.position, 'y', 0,numCubesAux*4);
 	gui.add(light.position, 'x', numCubesAux*-2,numCubesAux*2);
 	gui.add(light.position, 'z', numCubesAux*-2,numCubesAux*2);
 
@@ -47,9 +70,9 @@ function init() {
 		1000 //Limit how far can an object be from the camera and still be rendered
 	);
 
-	camera.position.x = numCubesAux*2;
-	camera.position.y = numCubesAux*2;
-	camera.position.z = numCubesAux*2;
+	camera.position.x = numCubesAux*2.5;
+	camera.position.y = numCubesAux*2.5;
+	camera.position.z = numCubesAux*2.5;
 
 	camera.lookAt(new THREE.Vector3(0,0,0));
 
@@ -57,7 +80,7 @@ function init() {
 	var renderer = new THREE.WebGLRenderer(); // Transofrms the 3d object into a 2d render of it
 	//renderer.shadowMap.enabled = true; //Enable the generation of shadows
 	renderer.setSize(window.innerWidth, window.innerHeight); // Ratio of the render
-	renderer.setClearColor('rgb(120,120,120)');
+	renderer.setClearColor('rgb(0,0,0)');
 	document.getElementById('webgl').appendChild(renderer.domElement); //Use the WebGL lib to render the object
 
 	raycaster = new THREE.Raycaster();
@@ -84,31 +107,75 @@ function raycast ( e ) {
     var intersects = raycaster.intersectObjects( scene.children );
 
     if(intersects.length>0){
-	    console.log(intersects[0].object);
-	    console.log(intersects[0].object.material.color);
-	    var red3 = new THREE.Color( Math.random(), Math.random(), Math.random() );  // color cube
-	    intersects[0].object.material.color = red3;
-	    intersects[0].object.scale.y = intersects[0].object.scale.y + Math.random();
-	    for ( var i = 0; i < intersects.length; i++ ) {
-	        //console.log( intersects[ i ] ); 
-	        /*
-	            An intersection has the following properties :
-	                - object : intersected object (THREE.Mesh)
-	                - distance : distance from camera to intersection (number)
-	                - face : intersected face (THREE.Face3)
-	                - faceIndex : intersected face index (number)
-	                - point : intersection point (THREE.Vector3)
-	                - uv : intersection point in the object's UV coordinates (THREE.Vector2)
-	        */
+	    var obj = intersects[0].object;
+	    console.log(obj);
+	    if(intersects[0].object.geometry.type == 'BoxGeometry'){
+	    	//var red3 = new THREE.Color( Math.random(), Math.random(), Math.random() );
+		    //obj.material.color = red3;
+		    //obj.geometry.parameters.height = intersects[0].object.scale.y + Math.random();
+		    
+			maxdist = .1;
+			mindist = 10000000;
+		    for (var i=0; i<boxGrid.length; i++){
+		    	//dist = Math.sqrt(distance(boxGrid[i].position, obj.position));
+		    	dist = distance(boxGrid[i].position, obj.position);
+		    	if(dist>maxdist)
+		    		maxdist = dist;
+		    	if(dist<mindist)
+		    		mindist = dist;
+		    }
+		    gen = Math.random();
+		    gen2 = Math.random()*.8+.1;
+		    for (var i=0; i<boxGrid.length; i++){
+				posx = boxGrid[i].position.x;
+				posz = boxGrid[i].position.z;
+				scene.remove(boxGrid[i]);
+				//dist = Math.sqrt(distance(boxGrid[i].position, obj.position));
+				dist = distance(boxGrid[i].position, obj.position);
+				distNorm = (dist-mindist)/(maxdist-mindist);
+				var nueva = getBox(1,numCubesAux*.8-(numCubesAux*.8*distNorm),1);
+				
+				if(gen<.33)
+					var col = new THREE.Color( distNorm, gen, distNorm );
+				else if(gen<.66)
+					var col = new THREE.Color( gen, distNorm, distNorm );
+				else
+					var col = new THREE.Color( distNorm, distNorm, gen );
+
+		    	nueva.material.color = col;
+		    	nueva.position.x = posx;
+		    	nueva.position.z = posz;
+		    	nueva.position.y = nueva.geometry.parameters.height/2;
+		    	boxGrid[i] = nueva;
+		    //boxGrid[i].geometry.parameters.height = Math.sqrt(distance(boxGrid[i].position, obj.position));
+		    }
+		    for (var g=0; g<boxGrid.length;g++){
+				scene.add(boxGrid[g]);
+			}
 	    }
-	    console.log(intersects.length)
-	    return intersects[0].object
+
+	    else if (intersects[0].object.geometry.type == 'PlaneGeometry'){
+	    	numCubesAux = numCubesAux + 1;
+
+
+			for (var g=0; g<boxGrid.length;g++){
+					scene.remove(boxGrid[g]);
+				}
+			console.log(numCubesAux);
+			boxGrid = getBoxGrid(numCubesAux, 2);
+			console.log(numCubesAux);
+
+	    	for (var g=0; g<boxGrid.length;g++){
+				scene.add(boxGrid[g]);
+			}
+			scene.remove(plane);
+			plane = getPlane(numCubesAux*2.5);
+			plane.rotation.x = Math.PI/2;
+			scene.add(plane)
+	    }
     }
-
     
-
 }
-
 
 function getDirectionalLight(color, intensity){
 	var light = new THREE.DirectionalLight(color,intensity);
@@ -139,15 +206,20 @@ function getBox(w, h, d){
 
 function getBoxGrid(numBoxes, separationBoxes){
 	var group = new Array();
+	co = 0.7;
 
 	for (var i=1;i<numBoxes;i++){
 		for (var j=1;j<numBoxes;j++){
 			if (i<=numBoxes/2){
 				if (j<=numBoxes/2){
 					var obj = getBox(1,Math.sqrt(j*i),1);
+					var col = new THREE.Color( co,co,co );
+		    		obj.material.color = col;
 				}
 				else{
 					var obj = getBox(1,Math.sqrt((numBoxes-j)*i),1);
+					var col = new THREE.Color( co,co,co );
+		    		obj.material.color = col;
 				}
 				obj.position.x = i * separationBoxes;
 				obj.position.y = obj.geometry.parameters.height/2;
@@ -157,9 +229,62 @@ function getBoxGrid(numBoxes, separationBoxes){
 			else{
 				if (j<=numBoxes/2){
 					var obj = getBox(1,Math.sqrt(j*(numBoxes-i)),1);
+					var col = new THREE.Color( co,co,co );
+		    		obj.material.color = col;
 				}
 				else{
 					var obj = getBox(1,Math.sqrt((numBoxes-j)*(numBoxes-i)),1);
+					var col = new THREE.Color( co,co,co );
+		    		obj.material.color = col;
+				}
+				obj.position.x = i * separationBoxes;
+				obj.position.y = obj.geometry.parameters.height/2;
+				obj.position.z = j * separationBoxes;
+				group.push(obj);
+			}
+		}
+	}
+
+	for(var h = 0;h<group.length;h++){
+		group[h].position.x = group[h].position.x -(separationBoxes*(numBoxes))/2;
+		group[h].position.z = group[h].position.z -(separationBoxes*(numBoxes))/2;
+	}	
+
+
+	return group;
+};
+
+function getBoxGridAlt(numBoxes, separationBoxes){
+	var group = new Array();
+
+	for (var i=1;i<numBoxes;i++){
+		for (var j=1;j<numBoxes;j++){
+			if (i<=numBoxes/2){
+				if (j<=numBoxes/2){
+					var obj = getBox(1,Math.sqrt(j*i),1);
+					var col = new THREE.Color( Math.random(), Math.random(), Math.random() );
+		    		obj.material.color = col;
+				}
+				else{
+					var obj = getBox(1,Math.sqrt((numBoxes-j)*i),1);
+					var col = new THREE.Color( Math.random(), Math.random(), Math.random() );
+		    		obj.material.color = col;
+				}
+				obj.position.x = i * separationBoxes;
+				obj.position.y = obj.geometry.parameters.height/2;
+				obj.position.z = j * separationBoxes;
+				group.push(obj);
+			}
+			else{
+				if (j<=numBoxes/2){
+					var obj = getBox(1,Math.sqrt(j*(numBoxes-i)),1);
+					var col = new THREE.Color( Math.random(), Math.random(), Math.random() );
+		    		obj.material.color = col;
+				}
+				else{
+					var obj = getBox(1,Math.sqrt((numBoxes-j)*(numBoxes-i)),1);
+					var col = new THREE.Color( Math.random(), Math.random(), Math.random() );
+		    		obj.material.color = col;
 				}
 				obj.position.x = i * separationBoxes;
 				obj.position.y = obj.geometry.parameters.height/2;
@@ -205,6 +330,14 @@ function getPlane(size){
 	return mesh;
 };
 
+function distance(v1, v2)
+{
+    var dx = v1.x - v2.x;
+    var dy = v1.y - v2.y;
+    var dz = v1.z - v2.z;
+
+    return Math.sqrt( dx * dx + dy * dy + dz * dz );
+}
 
 function update(renderer, scene, camera, controls){
 	renderer.render(scene, camera);
