@@ -1,20 +1,24 @@
 
+var raycaster, camera, mouse = { x : 0, y : 0 };
+
+
 function init() {
 	i = 0;
+
 	var scene = new THREE.Scene(); //Create a scene
 
 	var gui = new dat.GUI(); //Create a dat gui to interactivelly change parameters
 
-	var numCubesAux = 15
+	var numCubs = 10;
+	var numCubesAux = numCubs + 1;
 
 	var plane = getPlane(numCubesAux*3); // Create a plane
 	plane.name = 'plane-1'; //Give a name to the plane
 	var light = getDirectionalLight(0xffffff,1); //Create a lightsource
-	var Ambientlight = getAmbientLight('rgb(10,20,30)',1);
 	var sphere = getSphere(0.05);
-	var boxGrid = getBoxGrid(numCubesAux, numCubesAux/10);
+	//var box = getBox(1,1,1);
+	var boxGrid = getBoxGrid(numCubesAux, 2);
 	boxGrid.name = 'boxGrid';
-	light.name = 'lightsource'
 
 	plane.rotation.x = Math.PI/2; // Move the plane 90 degrees (pi/2 radians)
 	light.position.x = numCubesAux;
@@ -25,34 +29,39 @@ function init() {
 	
 	scene.add(plane); //Add the plane object to the scene
 	scene.add(light); // Add the light source to the scene
-	scene.add(Ambientlight); //Add the ambient light to the scene
 	light.add(sphere); // Add a sphere to the light object. With this I can see the "light bulb"
-	scene.add(boxGrid);
+	for (var g=0; g<boxGrid.length;g++){
+		scene.add(boxGrid[g]);
+	}
+	
 
 	gui.add(light, 'intensity', 0, 10);
 	gui.add(light.position, 'y', 0,numCubesAux*2);
 	gui.add(light.position, 'x', numCubesAux*-2,numCubesAux*2);
 	gui.add(light.position, 'z', numCubesAux*-2,numCubesAux*2);
-	//gui.add(light, 'penumbra', 0, 1);
 
-	var camera = new THREE.PerspectiveCamera( //Create a camera
+	camera = new THREE.PerspectiveCamera( //Create a camera
 		45, // Field of view
 		window.innerWidth/window.innerHeight, // Ratio of the screen to be used
 		1,  //Limit the closest an object can be to the camera to be rendered
 		1000 //Limit how far can an object be from the camera and still be rendered
 	);
 
-	camera.position.x = numCubesAux*3;
-	camera.position.y = numCubesAux;
-	camera.position.z = numCubesAux*3;
+	camera.position.x = numCubesAux*2;
+	camera.position.y = numCubesAux*2;
+	camera.position.z = numCubesAux*2;
 
 	camera.lookAt(new THREE.Vector3(0,0,0));
 
+
 	var renderer = new THREE.WebGLRenderer(); // Transofrms the 3d object into a 2d render of it
-	renderer.shadowMap.enabled = true; //Enable the generation of shadows
+	//renderer.shadowMap.enabled = true; //Enable the generation of shadows
 	renderer.setSize(window.innerWidth, window.innerHeight); // Ratio of the render
 	renderer.setClearColor('rgb(120,120,120)');
 	document.getElementById('webgl').appendChild(renderer.domElement); //Use the WebGL lib to render the object
+
+	raycaster = new THREE.Raycaster();
+    renderer.domElement.addEventListener('click', raycast, false );
 
 	var controls = new THREE.OrbitControls(camera, renderer.domElement);
 
@@ -61,20 +70,45 @@ function init() {
 	return scene;
 }
 
-function getLight(color, intensity){
-	var light = new THREE.PointLight(color,intensity);
-	light.castShadow = true;
-	return light;
+function raycast ( e ) {
+
+    //1. sets the mouse position with a coordinate system where the center
+    //   of the screen is the origin
+    mouse.x = ( e.clientX / window.innerWidth ) * 2 - 1;
+    mouse.y = - ( e.clientY / window.innerHeight ) * 2 + 1;
+
+    //2. set the picking ray from the camera position and mouse coordinates
+    raycaster.setFromCamera( mouse, camera );    
+
+    //3. compute intersections
+    var intersects = raycaster.intersectObjects( scene.children );
+
+    if(intersects.length>0){
+	    console.log(intersects[0].object);
+	    console.log(intersects[0].object.material.color);
+	    var red3 = new THREE.Color( Math.random(), Math.random(), Math.random() );  // color cube
+	    intersects[0].object.material.color = red3;
+	    intersects[0].object.scale.y = intersects[0].object.scale.y + Math.random();
+	    for ( var i = 0; i < intersects.length; i++ ) {
+	        //console.log( intersects[ i ] ); 
+	        /*
+	            An intersection has the following properties :
+	                - object : intersected object (THREE.Mesh)
+	                - distance : distance from camera to intersection (number)
+	                - face : intersected face (THREE.Face3)
+	                - faceIndex : intersected face index (number)
+	                - point : intersection point (THREE.Vector3)
+	                - uv : intersection point in the object's UV coordinates (THREE.Vector2)
+	        */
+	    }
+	    console.log(intersects.length)
+	    return intersects[0].object
+    }
+
+    
+
 }
 
-function getSpotLight(color, intensity){
-	var light = new THREE.SpotLight(color,intensity);
-	light.castShadow = true;
-	light.shadow.bias = 0.001;
-	light.shadow.mapSize.width = 2048;
-	light.shadow.mapSize.height = 2048;
-	return light;
-}
 
 function getDirectionalLight(color, intensity){
 	var light = new THREE.DirectionalLight(color,intensity);
@@ -87,11 +121,6 @@ function getDirectionalLight(color, intensity){
 	light.shadow.camera.right = 10;
 	light.shadow.camera.top = 10;
 
-	return light;
-}
-
-function getAmbientLight(color, intensity){
-	var light = new THREE.AmbientLight(color,intensity);
 	return light;
 }
 
@@ -109,36 +138,42 @@ function getBox(w, h, d){
 };
 
 function getBoxGrid(numBoxes, separationBoxes){
-	var group = new THREE.Group();
+	var group = new Array();
 
-	for (var i=0;i<numBoxes;i++){
-		for (var j=0;j<numBoxes;j++){
-			///var obj = getBox(1,1,1);
+	for (var i=1;i<numBoxes;i++){
+		for (var j=1;j<numBoxes;j++){
 			if (i<=numBoxes/2){
-				if (j<=numBoxes/2)
+				if (j<=numBoxes/2){
 					var obj = getBox(1,Math.sqrt(j*i),1);
-				else
+				}
+				else{
 					var obj = getBox(1,Math.sqrt((numBoxes-j)*i),1);
+				}
 				obj.position.x = i * separationBoxes;
 				obj.position.y = obj.geometry.parameters.height/2;
 				obj.position.z = j * separationBoxes;
-				group.add(obj);
+				group.push(obj);
 			}
 			else{
-				if (j<=numBoxes/2)
+				if (j<=numBoxes/2){
 					var obj = getBox(1,Math.sqrt(j*(numBoxes-i)),1);
-				else
+				}
+				else{
 					var obj = getBox(1,Math.sqrt((numBoxes-j)*(numBoxes-i)),1);
+				}
 				obj.position.x = i * separationBoxes;
 				obj.position.y = obj.geometry.parameters.height/2;
 				obj.position.z = j * separationBoxes;
-				group.add(obj);
+				group.push(obj);
 			}
 		}
 	}
 
-	group.position.x = -(separationBoxes*(numBoxes-1))/2;
-	group.position.z = -(separationBoxes*(numBoxes-1))/2;
+	for(var h = 0;h<group.length;h++){
+		group[h].position.x = group[h].position.x -(separationBoxes*(numBoxes))/2;
+		group[h].position.z = group[h].position.z -(separationBoxes*(numBoxes))/2;
+	}	
+
 
 	return group;
 };
@@ -170,20 +205,22 @@ function getPlane(size){
 	return mesh;
 };
 
+
 function update(renderer, scene, camera, controls){
 	renderer.render(scene, camera);
 
-	/*var boxGrid = getObjectByName('boxGrid');
-	boxGrid.children.forEach(function(child
+	//boxGrid = scene.getObjectByName('boxGrid');
+	//boxGrid.scale.y = 1.001;
+	/*boxGrid = scene.getObjectByName('boxGrid');
+	boxGrid.children.forEach(function(child){
 		child.scale.y = Math.random();
-		child.position.y = child.scale.y/2;
+		child.position.y = child.geometry.parameters.height/2;
 	});*/
 
-	//var camera = getObjectByName('camera');
-	camera.position.x = Math.cos(i)*20;
+	// Make the camera rotate around the scene
+	/*camera.position.x = Math.cos(i)*20;
 	camera.position.z = Math.sin(i)*20;
-	i = i + Math.PI/180;
-
+	i = i + Math.PI/180;*/
 
 	controls.update();	
 
